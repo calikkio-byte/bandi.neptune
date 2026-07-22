@@ -7,65 +7,84 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#162032; --border:#2d3b52;
-    --text:#e2e8f0; --muted:#94a3b8; --accent:#3b82f6; --accent2:#22c55e;
-    --danger:#ef4444; --warn:#f59e0b;
+    --bg:#f5f5f4; --panel:#ffffff; --panel2:#fafafa; --border:#c9c9c7;
+    --text:#1c1c1c; --muted:#6b6b6b; --accent:#0b5394; --accent2:#1a7a3c;
+    --danger:#a1281f; --warn:#8a5a00; --header:#e8e8e6;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding:20px;}
-  h1{font-size:22px;margin:0 0 4px;}
-  p.subtitle{color:var(--muted);margin:0 0 20px;font-size:13px;}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;}
-  .card h2{font-size:15px;margin:0 0 14px;color:#fff;}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
-  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
-  input[type=text],input[type=date],input[type=url],input[type=email],select,textarea{
-    width:100%;padding:8px 10px;background:var(--panel2);border:1px solid var(--border);
-    border-radius:8px;color:var(--text);font-size:13px;
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);padding:16px;font-size:14px;}
+  h1{font-size:20px;margin:0 0 4px;font-weight:700;letter-spacing:-.2px;}
+  p.subtitle{color:var(--muted);margin:0 0 18px;font-size:12px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:2px;padding:16px;margin-bottom:16px;}
+  .card h2{font-size:14px;margin:0 0 12px;color:#000;font-weight:700;border-bottom:2px solid var(--header);padding-bottom:8px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+  label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;}
+  input[type=text],input[type=date],input[type=url],input[type=email],input[type=number],select,textarea{
+    width:100%;padding:7px 9px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:2px;color:var(--text);font-size:13px;font-family:inherit;
   }
-  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
   .field{margin-bottom:2px;}
-  .toggle-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);}
+  .field.optional label::after{content:" (opz.)";color:#a3a3a1;text-transform:none;font-weight:400;}
+  .toggle-row{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:11px;color:var(--muted);}
   .toggle-row input{width:auto;}
-  .btn{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;transition:.15s;}
-  .btn-primary{background:var(--accent);color:#fff;}
-  .btn-primary:hover{background:#2563eb;}
-  .btn-success{background:var(--accent2);color:#052e14;}
-  .btn-success:hover{background:#16a34a;}
-  .btn-warn{background:var(--warn);color:#3d2200;}
-  .btn-warn:hover{background:#d97706;}
-  .btn-danger{background:var(--danger);color:#fff;}
-  .btn-danger:hover{background:#dc2626;}
-  .btn-secondary{background:#334155;color:#e2e8f0;}
-  .btn-secondary:hover{background:#475569;}
-  .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
-  table{width:100%;border-collapse:collapse;font-size:13px;}
-  th,td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;}
-  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;background:var(--panel);}
-  tr:hover td{background:rgba(59,130,246,0.06);}
-  a.link{color:#60a5fa;text-decoration:none;}
-  a.link:hover{text-decoration:underline;}
-  .table-wrap{overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:10px;}
-  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px;}
-  .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#334155;font-size:11px;color:#cbd5e1;}
-  .icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 6px;}
-  .icon-btn:hover{color:#fff;}
-  .empty{color:var(--muted);text-align:center;padding:30px;font-size:13px;}
+  .btn{cursor:pointer;border:1px solid transparent;border-radius:2px;padding:8px 14px;font-size:13px;font-weight:600;}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .btn-primary:hover{background:#083f70;}
+  .btn-success{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+  .btn-success:hover{background:#125e2d;}
+  .btn-warn{background:#fff;color:var(--warn);border-color:var(--warn);}
+  .btn-warn:hover{background:#fdf3e0;}
+  .btn-danger{background:#fff;color:var(--danger);border-color:var(--danger);}
+  .btn-danger:hover{background:#fbeceb;}
+  .btn-secondary{background:#fff;color:var(--text);border-color:var(--border);}
+  .btn-secondary:hover{background:var(--header);}
+  .btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1100px;}
+  th,td{padding:8px 9px;border:1px solid var(--border);text-align:left;vertical-align:top;}
+  th{color:#000;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.02em;background:var(--header);position:sticky;top:0;}
+  tr:nth-child(even) td{background:#fbfbfa;}
+  tr:hover td{background:#eef4fa;}
+  a.link{color:var(--accent);text-decoration:underline;}
+  a.link:hover{color:#083f70;}
+  .table-wrap{overflow:auto;max-height:560px;border:1px solid var(--border);border-radius:2px;}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:10px;}
+  .filters-row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;}
+  .range-pair{display:flex;gap:6px;}
+  .badge{display:inline-block;padding:2px 6px;border:1px solid var(--border);border-radius:2px;font-size:10.5px;color:var(--muted);background:#fafafa;}
+  .icon-btn{background:none;border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--muted);font-size:13px;padding:3px 7px;}
+  .icon-btn:hover{background:var(--header);color:#000;}
+  .empty{color:var(--muted);text-align:center;padding:26px;font-size:13px;}
   .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-  .count{font-size:12px;color:var(--muted);}
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;z-index:50;}
+  .count{font-size:11px;color:var(--muted);font-weight:600;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center;z-index:50;padding:12px;}
   .modal-bg.open{display:flex;}
-  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;width:min(480px,90vw);}
-  .modal h3{margin:0 0 12px;font-size:15px;}
-  footer{color:var(--muted);font-size:11px;text-align:center;margin-top:30px;}
-  #saveStatus{font-size:11px;color:#22c55e;transition:opacity .3s;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:2px;padding:18px;width:min(500px,95vw);max-height:90vh;overflow:auto;}
+  .modal h3{margin:0 0 12px;font-size:14px;border-bottom:2px solid var(--header);padding-bottom:8px;}
+  footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:24px;}
+  #saveStatus{font-size:11px;color:var(--accent2);font-weight:600;}
   input[type=file]{display:none;}
+  .divider{height:1px;background:var(--border);margin:14px 0;}
+  .subgrid-title{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin:14px 0 8px;}
+
+  @media (max-width: 720px){
+    body{padding:10px;font-size:13px;}
+    h1{font-size:18px;}
+    .card{padding:12px;}
+    .grid{grid-template-columns:1fr;}
+    .filters,.filters-row2{grid-template-columns:1fr;}
+    .btn-row{flex-direction:column;}
+    .btn-row .btn{width:100%;}
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .toolbar .btn-row{width:100%;}
+    table{min-width:900px;}
+  }
 </style>
 </head>
 <body>
 
 <h1>Gestionale Bandi</h1>
-<p class="subtitle">Inserimento bandi, filtri per area geografica, backup JSON/Excel, invio email ai clienti &mdash; tutto salvato automaticamente in locale.</p>
+<p class="subtitle">Inserimento bandi, filtri per area geografica e criteri economici, backup JSON/Excel, invio email ai clienti.</p>
 
 <div class="card">
   <h2>Nuovo bando</h2>
@@ -85,22 +104,49 @@
     <div class="field">
       <label>Regione</label>
       <select id="f-regione"></select>
-      <div class="toggle-row"><input type="checkbox" id="f-regione-free-toggle"><span>Inserisci a testo libero</span></div>
-      <input type="text" id="f-regione-free" placeholder="Regione (testo libero)" style="display:none;margin-top:6px;">
+      <div class="toggle-row"><input type="checkbox" id="f-regione-free-toggle"><span>Testo libero</span></div>
+      <input type="text" id="f-regione-free" placeholder="Regione (testo libero)" style="display:none;margin-top:5px;">
     </div>
     <div class="field">
       <label>Provincia</label>
       <select id="f-provincia"></select>
-      <div class="toggle-row"><input type="checkbox" id="f-provincia-free-toggle"><span>Inserisci a testo libero</span></div>
-      <input type="text" id="f-provincia-free" placeholder="Provincia (testo libero)" style="display:none;margin-top:6px;">
+      <div class="toggle-row"><input type="checkbox" id="f-provincia-free-toggle"><span>Testo libero</span></div>
+      <input type="text" id="f-provincia-free" placeholder="Provincia (testo libero)" style="display:none;margin-top:5px;">
     </div>
     <div class="field">
       <label>Camera di Commercio</label>
       <select id="f-cciaa"></select>
-      <div class="toggle-row"><input type="checkbox" id="f-cciaa-free-toggle"><span>Inserisci a testo libero</span></div>
-      <input type="text" id="f-cciaa-free" placeholder="Camera di Commercio (testo libero)" style="display:none;margin-top:6px;">
+      <div class="toggle-row"><input type="checkbox" id="f-cciaa-free-toggle"><span>Testo libero</span></div>
+      <input type="text" id="f-cciaa-free" placeholder="Camera di Commercio (testo libero)" style="display:none;margin-top:5px;">
     </div>
   </div>
+
+  <div class="subgrid-title">Dati economici e operativi (opzionali)</div>
+  <div class="grid">
+    <div class="field optional">
+      <label>Settore di attività</label>
+      <select id="f-settore"></select>
+      <div class="toggle-row"><input type="checkbox" id="f-settore-free-toggle"><span>Testo libero</span></div>
+      <input type="text" id="f-settore-free" placeholder="Settore (testo libero)" style="display:none;margin-top:5px;">
+    </div>
+    <div class="field optional">
+      <label>Contributo richiesto (€)</label>
+      <input type="number" id="f-contributo" placeholder="Es. 20000" min="0" step="100">
+    </div>
+    <div class="field optional">
+      <label>Investimento (€)</label>
+      <input type="number" id="f-investimento" placeholder="Es. 50000" min="0" step="100">
+    </div>
+    <div class="field optional">
+      <label>Operatività</label>
+      <input type="text" id="f-operativita" placeholder="Es. Tutto il territorio nazionale">
+    </div>
+  </div>
+  <div class="field optional" style="margin-top:10px;">
+    <label>Note spese ammissibili</label>
+    <textarea id="f-note" rows="3" placeholder="Descrizione libera delle spese ammissibili..."></textarea>
+  </div>
+
   <div class="btn-row">
     <button class="btn btn-primary" id="btn-add">Aggiungi bando</button>
     <button class="btn btn-secondary" id="btn-clear-form">Svuota campi</button>
@@ -112,7 +158,7 @@
   <h2>Filtri</h2>
   <div class="filters">
     <div>
-      <label>Cerca titolo</label>
+      <label>Cerca titolo / note</label>
       <input type="text" id="filter-search" placeholder="Cerca...">
     </div>
     <div>
@@ -128,11 +174,36 @@
       <select id="filter-cciaa"><option value="">Tutte</option></select>
     </div>
   </div>
+  <div class="divider"></div>
+  <div class="filters-row2">
+    <div>
+      <label>Settore di attività</label>
+      <select id="filter-settore"><option value="">Tutti</option></select>
+    </div>
+    <div>
+      <label>Contributo richiesto (€)</label>
+      <div class="range-pair">
+        <input type="number" id="filter-contributo-min" placeholder="Min">
+        <input type="number" id="filter-contributo-max" placeholder="Max">
+      </div>
+    </div>
+    <div>
+      <label>Investimento (€)</label>
+      <div class="range-pair">
+        <input type="number" id="filter-investimento-min" placeholder="Min">
+        <input type="number" id="filter-investimento-max" placeholder="Max">
+      </div>
+    </div>
+    <div>
+      <label>Operatività</label>
+      <input type="text" id="filter-operativita" placeholder="Cerca...">
+    </div>
+  </div>
 </div>
 
 <div class="card">
   <div class="toolbar">
-    <h2 style="margin:0;">Elenco bandi <span class="count" id="rowCount"></span></h2>
+    <h2 style="margin:0;border-bottom:none;padding-bottom:0;">Elenco bandi <span class="count" id="rowCount"></span></h2>
     <div class="btn-row" style="margin:0;">
       <button class="btn btn-secondary" id="btn-select-all">Seleziona tutti</button>
       <button class="btn btn-secondary" id="btn-deselect-all">Deseleziona</button>
@@ -144,14 +215,19 @@
     <table>
       <thead>
         <tr>
-          <th style="width:30px;"><input type="checkbox" id="check-all-header"></th>
+          <th style="width:26px;"><input type="checkbox" id="check-all-header"></th>
           <th>Titolo bando</th>
           <th>Link</th>
           <th>Apertura</th>
           <th>Regione</th>
           <th>Provincia</th>
           <th>Camera di Commercio</th>
-          <th style="width:70px;">Azioni</th>
+          <th>Settore</th>
+          <th>Contributo (€)</th>
+          <th>Investimento (€)</th>
+          <th>Operatività</th>
+          <th>Note spese</th>
+          <th style="width:60px;">Azioni</th>
         </tr>
       </thead>
       <tbody id="table-body"></tbody>
@@ -174,11 +250,11 @@
     <h3>Invia email ai clienti</h3>
     <label>Email destinatari (separate da virgola)</label>
     <input type="email" id="mail-to" placeholder="cliente1@email.com, cliente2@email.com" multiple>
-    <div style="margin-top:12px;">
+    <div style="margin-top:10px;">
       <label>Oggetto</label>
       <input type="text" id="mail-subject">
     </div>
-    <div style="margin-top:12px;">
+    <div style="margin-top:10px;">
       <label>Anteprima corpo email</label>
       <textarea id="mail-body" rows="8" readonly></textarea>
     </div>
@@ -194,19 +270,19 @@
 <script>
 const REGIONI_PROVINCE = {"Abruzzo": ["Chieti", "L'Aquila", "Pescara", "Teramo"], "Basilicata": ["Matera", "Potenza"], "Calabria": ["Catanzaro", "Cosenza", "Crotone", "Reggio Calabria", "Vibo Valentia"], "Campania": ["Avellino", "Benevento", "Caserta", "Napoli", "Salerno"], "Emilia-Romagna": ["Bologna", "Ferrara", "Forlì-Cesena", "Modena", "Parma", "Piacenza", "Ravenna", "Reggio Emilia", "Rimini"], "Friuli-Venezia Giulia": ["Gorizia", "Pordenone", "Trieste", "Udine"], "Lazio": ["Frosinone", "Latina", "Rieti", "Roma", "Viterbo"], "Liguria": ["Genova", "Imperia", "La Spezia", "Savona"], "Lombardia": ["Bergamo", "Brescia", "Como", "Cremona", "Lecco", "Lodi", "Mantova", "Milano", "Monza e della Brianza", "Pavia", "Sondrio", "Varese"], "Marche": ["Ancona", "Ascoli Piceno", "Fermo", "Macerata", "Pesaro e Urbino"], "Molise": ["Campobasso", "Isernia"], "Piemonte": ["Alessandria", "Asti", "Biella", "Cuneo", "Novara", "Torino", "Verbano-Cusio-Ossola", "Vercelli"], "Puglia": ["Bari", "Barletta-Andria-Trani", "Brindisi", "Foggia", "Lecce", "Taranto"], "Sardegna": ["Cagliari", "Nuoro", "Oristano", "Sassari", "Sud Sardegna"], "Sicilia": ["Agrigento", "Caltanissetta", "Catania", "Enna", "Messina", "Palermo", "Ragusa", "Siracusa", "Trapani"], "Toscana": ["Arezzo", "Firenze", "Grosseto", "Livorno", "Lucca", "Massa-Carrara", "Pisa", "Pistoia", "Prato", "Siena"], "Trentino-Alto Adige": ["Bolzano", "Trento"], "Umbria": ["Perugia", "Terni"], "Valle d'Aosta": ["Aosta"], "Veneto": ["Belluno", "Padova", "Rovigo", "Treviso", "Venezia", "Verona", "Vicenza"]};
 const CCIAA_OVERRIDE = {"Asti": "CCIAA di Alessandria-Asti", "Alessandria": "CCIAA di Alessandria-Asti", "Biella": "CCIAA di Biella-Vercelli", "Vercelli": "CCIAA di Biella-Vercelli", "Novara": "CCIAA di Novara e VCO", "Verbano-Cusio-Ossola": "CCIAA di Novara e VCO", "Como": "CCIAA di Como-Lecco", "Lecco": "CCIAA di Como-Lecco", "Milano": "CCIAA di Milano Monza Brianza Lodi", "Monza e della Brianza": "CCIAA di Milano Monza Brianza Lodi", "Lodi": "CCIAA di Milano Monza Brianza Lodi", "Arezzo": "CCIAA di Arezzo-Siena", "Siena": "CCIAA di Arezzo-Siena", "Pistoia": "CCIAA di Pistoia-Prato", "Prato": "CCIAA di Pistoia-Prato", "Frosinone": "CCIAA di Frosinone-Latina", "Latina": "CCIAA di Frosinone-Latina", "Chieti": "CCIAA di Chieti-Pescara", "Pescara": "CCIAA di Chieti-Pescara", "Ascoli Piceno": "CCIAA di Ascoli Piceno-Fermo", "Fermo": "CCIAA di Ascoli Piceno-Fermo", "Belluno": "CCIAA di Belluno-Dolomiti", "Venezia": "CCIAA di Venezia Rovigo Delta Lagunare", "Rovigo": "CCIAA di Venezia Rovigo Delta Lagunare", "Palermo": "CCIAA di Palermo-Enna", "Enna": "CCIAA di Palermo-Enna", "Cagliari": "CCIAA di Cagliari-Oristano", "Oristano": "CCIAA di Cagliari-Oristano"};
+const SETTORI = ["Agricoltura e Agroalimentare","Artigianato","Commercio","Edilizia e Costruzioni","Energia e Ambiente","ICT e Digitale","Industria e Manifatturiero","Logistica e Trasporti","Servizi alle imprese","Turismo e Ristorazione","Altro"];
 
 function cciaaNameFor(provincia){
   if(!provincia) return "";
   return CCIAA_OVERRIDE[provincia] || ("CCIAA di " + provincia);
 }
-
 function getAllCCIAA(){
   const set = new Set();
   Object.values(REGIONI_PROVINCE).flat().forEach(p => set.add(cciaaNameFor(p)));
   return Array.from(set).sort();
 }
 
-const STORAGE_KEY = "gestionale_bandi_v1";
+const STORAGE_KEY = "gestionale_bandi_v2";
 let bandi = [];
 
 function loadData(){
@@ -215,15 +291,13 @@ function loadData(){
     bandi = raw ? JSON.parse(raw) : [];
   }catch(e){ bandi = []; }
 }
-
 function saveData(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(bandi));
   const s = document.getElementById('saveStatus');
   s.textContent = "Salvato ✓ " + new Date().toLocaleTimeString();
   s.style.opacity = 1;
-  setTimeout(()=>{ s.style.opacity = 0.3; }, 1500);
+  setTimeout(()=>{ s.style.opacity = 0.4; }, 1500);
 }
-
 function uid(){ return 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
 
 function populateSelect(select, options, placeholder){
@@ -243,6 +317,7 @@ function initFormSelects(){
   populateSelect(regioneSelect, Object.keys(REGIONI_PROVINCE).sort(), "-- Seleziona regione --");
   populateSelect(document.getElementById('f-provincia'), [], "-- Seleziona prima la regione --");
   populateSelect(document.getElementById('f-cciaa'), getAllCCIAA(), "-- Seleziona Camera di Commercio --");
+  populateSelect(document.getElementById('f-settore'), SETTORI, "-- Seleziona settore --");
 
   regioneSelect.addEventListener('change', () => {
     const provs = REGIONI_PROVINCE[regioneSelect.value] || [];
@@ -262,7 +337,7 @@ function initFormSelects(){
     }
   });
 
-  ['regione','provincia','cciaa'].forEach(field=>{
+  ['regione','provincia','cciaa','settore'].forEach(field=>{
     document.getElementById('f-'+field+'-free-toggle').addEventListener('change', (e)=>{
       const select = document.getElementById('f-'+field);
       const free = document.getElementById('f-'+field+'-free');
@@ -276,6 +351,7 @@ function initFilterSelects(){
   populateSelect(document.getElementById('filter-regione'), Object.keys(REGIONI_PROVINCE).sort(), "Tutte");
   populateSelect(document.getElementById('filter-provincia'), Object.values(REGIONI_PROVINCE).flat().sort(), "Tutte");
   populateSelect(document.getElementById('filter-cciaa'), getAllCCIAA(), "Tutte");
+  populateSelect(document.getElementById('filter-settore'), SETTORI, "Tutti");
 }
 
 function getFieldValue(field){
@@ -290,7 +366,11 @@ function clearForm(){
   document.getElementById('f-titolo').value = "";
   document.getElementById('f-link').value = "";
   document.getElementById('f-data').value = "";
-  ['regione','provincia','cciaa'].forEach(field=>{
+  document.getElementById('f-contributo').value = "";
+  document.getElementById('f-investimento').value = "";
+  document.getElementById('f-operativita').value = "";
+  document.getElementById('f-note').value = "";
+  ['regione','provincia','cciaa','settore'].forEach(field=>{
     document.getElementById('f-'+field).value = "";
     document.getElementById('f-'+field+'-free').value = "";
     document.getElementById('f-'+field+'-free-toggle').checked = false;
@@ -307,12 +387,21 @@ function addBando(){
   const regione = getFieldValue('regione');
   const provincia = getFieldValue('provincia');
   const cciaa = getFieldValue('cciaa');
+  const settore = getFieldValue('settore');
+  const contributo = document.getElementById('f-contributo').value;
+  const investimento = document.getElementById('f-investimento').value;
+  const operativita = document.getElementById('f-operativita').value.trim();
+  const note = document.getElementById('f-note').value.trim();
 
   if(!titolo || !link){
     alert("Titolo e Link sono obbligatori.");
     return;
   }
-  bandi.push({ id: uid(), titolo, link, data_apertura, regione, provincia, cciaa, selected:false });
+  bandi.push({
+    id: uid(), titolo, link, data_apertura, regione, provincia, cciaa,
+    settore, contributo: contributo?Number(contributo):null, investimento: investimento?Number(investimento):null,
+    operativita, note, selected:false
+  });
   saveData();
   clearForm();
   render();
@@ -336,12 +425,22 @@ function editBando(id){
   const newRegione = prompt("Regione:", b.regione || "");
   const newProvincia = prompt("Provincia:", b.provincia || "");
   const newCciaa = prompt("Camera di Commercio:", b.cciaa || "");
+  const newSettore = prompt("Settore di attività:", b.settore || "");
+  const newContributo = prompt("Contributo richiesto (€):", b.contributo ?? "");
+  const newInvestimento = prompt("Investimento (€):", b.investimento ?? "");
+  const newOperativita = prompt("Operatività:", b.operativita || "");
+  const newNote = prompt("Note spese ammissibili:", b.note || "");
   b.titolo = newTitolo.trim();
   b.link = newLink.trim();
   b.data_apertura = newData ? newData.trim() : "";
   b.regione = newRegione ? newRegione.trim() : "";
   b.provincia = newProvincia ? newProvincia.trim() : "";
   b.cciaa = newCciaa ? newCciaa.trim() : "";
+  b.settore = newSettore ? newSettore.trim() : "";
+  b.contributo = newContributo ? Number(newContributo) : null;
+  b.investimento = newInvestimento ? Number(newInvestimento) : null;
+  b.operativita = newOperativita ? newOperativita.trim() : "";
+  b.note = newNote ? newNote.trim() : "";
   saveData();
   render();
 }
@@ -351,13 +450,31 @@ function applyFilters(list){
   const reg = document.getElementById('filter-regione').value;
   const prov = document.getElementById('filter-provincia').value;
   const cciaa = document.getElementById('filter-cciaa').value;
+  const settore = document.getElementById('filter-settore').value;
+  const contribMin = document.getElementById('filter-contributo-min').value;
+  const contribMax = document.getElementById('filter-contributo-max').value;
+  const investMin = document.getElementById('filter-investimento-min').value;
+  const investMax = document.getElementById('filter-investimento-max').value;
+  const operativita = document.getElementById('filter-operativita').value.toLowerCase();
+
   return list.filter(b=>{
-    if(search && !b.titolo.toLowerCase().includes(search)) return false;
+    if(search && !(b.titolo.toLowerCase().includes(search) || (b.note||"").toLowerCase().includes(search))) return false;
     if(reg && b.regione !== reg) return false;
     if(prov && b.provincia !== prov) return false;
     if(cciaa && b.cciaa !== cciaa) return false;
+    if(settore && b.settore !== settore) return false;
+    if(contribMin && (b.contributo===null || b.contributo < Number(contribMin))) return false;
+    if(contribMax && (b.contributo===null || b.contributo > Number(contribMax))) return false;
+    if(investMin && (b.investimento===null || b.investimento < Number(investMin))) return false;
+    if(investMax && (b.investimento===null || b.investimento > Number(investMax))) return false;
+    if(operativita && !(b.operativita||"").toLowerCase().includes(operativita)) return false;
     return true;
   });
+}
+
+function formatCurrency(v){
+  if(v===null || v===undefined || v==="") return '<span class="badge">n/d</span>';
+  return Number(v).toLocaleString('it-IT');
 }
 
 function render(){
@@ -365,7 +482,7 @@ function render(){
   const filtered = applyFilters(bandi);
   document.getElementById('rowCount').textContent = "(" + filtered.length + " / " + bandi.length + ")";
   if(filtered.length===0){
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Nessun bando trovato. Aggiungine uno dal form sopra.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">Nessun bando trovato. Aggiungine uno dal form sopra.</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(b => `
@@ -377,9 +494,14 @@ function render(){
       <td>${b.regione || '<span class="badge">n/d</span>'}</td>
       <td>${b.provincia || '<span class="badge">n/d</span>'}</td>
       <td>${b.cciaa || '<span class="badge">n/d</span>'}</td>
+      <td>${b.settore || '<span class="badge">n/d</span>'}</td>
+      <td>${formatCurrency(b.contributo)}</td>
+      <td>${formatCurrency(b.investimento)}</td>
+      <td>${b.operativita || '<span class="badge">n/d</span>'}</td>
+      <td>${b.note ? escapeHtml(b.note).slice(0,60)+(b.note.length>60?'…':'') : '<span class="badge">n/d</span>'}</td>
       <td>
-        <button class="icon-btn" title="Modifica" onclick="editBando('${b.id}')">✏️</button>
-        <button class="icon-btn" title="Elimina" onclick="deleteBando('${b.id}')">🗑️</button>
+        <button class="icon-btn" title="Modifica" onclick="editBando('${b.id}')">Mod.</button>
+        <button class="icon-btn" title="Elimina" onclick="deleteBando('${b.id}')">Elim.</button>
       </td>
     </tr>
   `).join('');
@@ -411,7 +533,12 @@ function exportExcel(){
     "Data apertura sportello": b.data_apertura,
     "Regione": b.regione,
     "Provincia": b.provincia,
-    "Camera di Commercio": b.cciaa
+    "Camera di Commercio": b.cciaa,
+    "Settore di attività": b.settore,
+    "Contributo richiesto (€)": b.contributo,
+    "Investimento (€)": b.investimento,
+    "Operatività": b.operativita,
+    "Note spese ammissibili": b.note
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -468,6 +595,11 @@ Link: ${b.link}
 Regione: ${b.regione || 'n/d'}
 Provincia: ${b.provincia || 'n/d'}
 Camera di Commercio: ${b.cciaa || 'n/d'}
+Settore di attività: ${b.settore || 'n/d'}
+Contributo richiesto: ${b.contributo ? b.contributo.toLocaleString('it-IT')+' €' : 'n/d'}
+Investimento: ${b.investimento ? b.investimento.toLocaleString('it-IT')+' €' : 'n/d'}
+Operatività: ${b.operativita || 'n/d'}
+Note spese ammissibili: ${b.note || 'n/d'}
 `)).join('\n---\n\n');
 }
 
@@ -481,11 +613,9 @@ function openMailModal(){
   document.getElementById('mail-body').value = buildMailBody(selected);
   document.getElementById('mail-modal').classList.add('open');
 }
-
 function closeMailModal(){
   document.getElementById('mail-modal').classList.remove('open');
 }
-
 function sendMail(){
   const to = document.getElementById('mail-to').value.trim();
   const subject = document.getElementById('mail-subject').value.trim();
@@ -525,7 +655,10 @@ function initEvents(){
     bandi = bandi.filter(b=>!selIds.has(b.id));
     saveData(); render();
   });
-  ['filter-search','filter-regione','filter-provincia','filter-cciaa'].forEach(id=>{
+  [
+    'filter-search','filter-regione','filter-provincia','filter-cciaa','filter-settore',
+    'filter-contributo-min','filter-contributo-max','filter-investimento-min','filter-investimento-max','filter-operativita'
+  ].forEach(id=>{
     document.getElementById(id).addEventListener('input', render);
   });
 }
