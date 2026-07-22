@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionale Bandi</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#162032; --border:#2d3b52;
+    --text:#e2e8f0; --muted:#94a3b8; --accent:#3b82f6; --accent2:#22c55e;
+    --danger:#ef4444; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding:20px;}
+  h1{font-size:22px;margin:0 0 4px;}
+  p.subtitle{color:var(--muted);margin:0 0 20px;font-size:13px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;}
+  .card h2{font-size:15px;margin:0 0 14px;color:#fff;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+  input[type=text],input[type=date],input[type=url],input[type=email],select,textarea{
+    width:100%;padding:8px 10px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-size:13px;
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  .field{margin-bottom:2px;}
+  .toggle-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);}
+  .toggle-row input{width:auto;}
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;transition:.15s;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:#2563eb;}
+  .btn-success{background:var(--accent2);color:#052e14;}
+  .btn-success:hover{background:#16a34a;}
+  .btn-warn{background:var(--warn);color:#3d2200;}
+  .btn-warn:hover{background:#d97706;}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-danger:hover{background:#dc2626;}
+  .btn-secondary{background:#334155;color:#e2e8f0;}
+  .btn-secondary:hover{background:#475569;}
+  .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;background:var(--panel);}
+  tr:hover td{background:rgba(59,130,246,0.06);}
+  a.link{color:#60a5fa;text-decoration:none;}
+  a.link:hover{text-decoration:underline;}
+  .table-wrap{overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:10px;}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#334155;font-size:11px;color:#cbd5e1;}
+  .icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 6px;}
+  .icon-btn:hover{color:#fff;}
+  .empty{color:var(--muted);text-align:center;padding:30px;font-size:13px;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .count{font-size:12px;color:var(--muted);}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;z-index:50;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;width:min(480px,90vw);}
+  .modal h3{margin:0 0 12px;font-size:15px;}
+  footer{color:var(--muted);font-size:11px;text-align:center;margin-top:30px;}
+  #saveStatus{font-size:11px;color:#22c55e;transition:opacity .3s;}
+  input[type=file]{display:none;}
+</style>
+</head>
+<body>
+
+<h1>Gestionale Bandi</h1>
+<p class="subtitle">Inserimento bandi, filtri per area geografica, backup JSON/Excel, invio email ai clienti &mdash; tutto salvato automaticamente in locale.</p>
+
+<div class="card">
+  <h2>Nuovo bando</h2>
+  <div class="grid">
+    <div class="field">
+      <label>Titolo del bando *</label>
+      <input type="text" id="f-titolo" placeholder="Es. Bando digitalizzazione PMI 2026">
+    </div>
+    <div class="field">
+      <label>Link della fonte (URL) *</label>
+      <input type="url" id="f-link" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>Data apertura sportello</label>
+      <input type="date" id="f-data">
+    </div>
+    <div class="field">
+      <label>Regione</label>
+      <select id="f-regione"></select>
+      <div class="toggle-row"><input type="checkbox" id="f-regione-free-toggle"><span>Inserisci a testo libero</span></div>
+      <input type="text" id="f-regione-free" placeholder="Regione (testo libero)" style="display:none;margin-top:6px;">
+    </div>
+    <div class="field">
+      <label>Provincia</label>
+      <select id="f-provincia"></select>
+      <div class="toggle-row"><input type="checkbox" id="f-provincia-free-toggle"><span>Inserisci a testo libero</span></div>
+      <input type="text" id="f-provincia-free" placeholder="Provincia (testo libero)" style="display:none;margin-top:6px;">
+    </div>
+    <div class="field">
+      <label>Camera di Commercio</label>
+      <select id="f-cciaa"></select>
+      <div class="toggle-row"><input type="checkbox" id="f-cciaa-free-toggle"><span>Inserisci a testo libero</span></div>
+      <input type="text" id="f-cciaa-free" placeholder="Camera di Commercio (testo libero)" style="display:none;margin-top:6px;">
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-add">Aggiungi bando</button>
+    <button class="btn btn-secondary" id="btn-clear-form">Svuota campi</button>
+    <span id="saveStatus"></span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Filtri</h2>
+  <div class="filters">
+    <div>
+      <label>Cerca titolo</label>
+      <input type="text" id="filter-search" placeholder="Cerca...">
+    </div>
+    <div>
+      <label>Regione</label>
+      <select id="filter-regione"><option value="">Tutte</option></select>
+    </div>
+    <div>
+      <label>Provincia</label>
+      <select id="filter-provincia"><option value="">Tutte</option></select>
+    </div>
+    <div>
+      <label>Camera di Commercio</label>
+      <select id="filter-cciaa"><option value="">Tutte</option></select>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <h2 style="margin:0;">Elenco bandi <span class="count" id="rowCount"></span></h2>
+    <div class="btn-row" style="margin:0;">
+      <button class="btn btn-secondary" id="btn-select-all">Seleziona tutti</button>
+      <button class="btn btn-secondary" id="btn-deselect-all">Deseleziona</button>
+      <button class="btn btn-warn" id="btn-send-mail">Invia email selezionati</button>
+      <button class="btn btn-danger" id="btn-delete-selected">Elimina selezionati</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30px;"><input type="checkbox" id="check-all-header"></th>
+          <th>Titolo bando</th>
+          <th>Link</th>
+          <th>Apertura</th>
+          <th>Regione</th>
+          <th>Provincia</th>
+          <th>Camera di Commercio</th>
+          <th style="width:70px;">Azioni</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Backup &amp; Ripristino</h2>
+  <div class="btn-row">
+    <button class="btn btn-success" id="btn-export-json">Scarica JSON</button>
+    <button class="btn btn-success" id="btn-export-excel">Scarica Excel</button>
+    <button class="btn btn-secondary" id="btn-import-json-trigger">Importa JSON</button>
+    <input type="file" id="btn-import-json" accept=".json">
+  </div>
+</div>
+
+<div class="modal-bg" id="mail-modal">
+  <div class="modal">
+    <h3>Invia email ai clienti</h3>
+    <label>Email destinatari (separate da virgola)</label>
+    <input type="email" id="mail-to" placeholder="cliente1@email.com, cliente2@email.com" multiple>
+    <div style="margin-top:12px;">
+      <label>Oggetto</label>
+      <input type="text" id="mail-subject">
+    </div>
+    <div style="margin-top:12px;">
+      <label>Anteprima corpo email</label>
+      <textarea id="mail-body" rows="8" readonly></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="mail-confirm">Apri app mail</button>
+      <button class="btn btn-secondary" id="mail-cancel">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<footer>Gestionale Bandi &mdash; dati salvati in localStorage del browser. Effettua backup regolari con JSON/Excel.</footer>
+
+<script>
+const REGIONI_PROVINCE = {"Abruzzo": ["Chieti", "L'Aquila", "Pescara", "Teramo"], "Basilicata": ["Matera", "Potenza"], "Calabria": ["Catanzaro", "Cosenza", "Crotone", "Reggio Calabria", "Vibo Valentia"], "Campania": ["Avellino", "Benevento", "Caserta", "Napoli", "Salerno"], "Emilia-Romagna": ["Bologna", "Ferrara", "Forlì-Cesena", "Modena", "Parma", "Piacenza", "Ravenna", "Reggio Emilia", "Rimini"], "Friuli-Venezia Giulia": ["Gorizia", "Pordenone", "Trieste", "Udine"], "Lazio": ["Frosinone", "Latina", "Rieti", "Roma", "Viterbo"], "Liguria": ["Genova", "Imperia", "La Spezia", "Savona"], "Lombardia": ["Bergamo", "Brescia", "Como", "Cremona", "Lecco", "Lodi", "Mantova", "Milano", "Monza e della Brianza", "Pavia", "Sondrio", "Varese"], "Marche": ["Ancona", "Ascoli Piceno", "Fermo", "Macerata", "Pesaro e Urbino"], "Molise": ["Campobasso", "Isernia"], "Piemonte": ["Alessandria", "Asti", "Biella", "Cuneo", "Novara", "Torino", "Verbano-Cusio-Ossola", "Vercelli"], "Puglia": ["Bari", "Barletta-Andria-Trani", "Brindisi", "Foggia", "Lecce", "Taranto"], "Sardegna": ["Cagliari", "Nuoro", "Oristano", "Sassari", "Sud Sardegna"], "Sicilia": ["Agrigento", "Caltanissetta", "Catania", "Enna", "Messina", "Palermo", "Ragusa", "Siracusa", "Trapani"], "Toscana": ["Arezzo", "Firenze", "Grosseto", "Livorno", "Lucca", "Massa-Carrara", "Pisa", "Pistoia", "Prato", "Siena"], "Trentino-Alto Adige": ["Bolzano", "Trento"], "Umbria": ["Perugia", "Terni"], "Valle d'Aosta": ["Aosta"], "Veneto": ["Belluno", "Padova", "Rovigo", "Treviso", "Venezia", "Verona", "Vicenza"]};
+const CCIAA_OVERRIDE = {"Asti": "CCIAA di Alessandria-Asti", "Alessandria": "CCIAA di Alessandria-Asti", "Biella": "CCIAA di Biella-Vercelli", "Vercelli": "CCIAA di Biella-Vercelli", "Novara": "CCIAA di Novara e VCO", "Verbano-Cusio-Ossola": "CCIAA di Novara e VCO", "Como": "CCIAA di Como-Lecco", "Lecco": "CCIAA di Como-Lecco", "Milano": "CCIAA di Milano Monza Brianza Lodi", "Monza e della Brianza": "CCIAA di Milano Monza Brianza Lodi", "Lodi": "CCIAA di Milano Monza Brianza Lodi", "Arezzo": "CCIAA di Arezzo-Siena", "Siena": "CCIAA di Arezzo-Siena", "Pistoia": "CCIAA di Pistoia-Prato", "Prato": "CCIAA di Pistoia-Prato", "Frosinone": "CCIAA di Frosinone-Latina", "Latina": "CCIAA di Frosinone-Latina", "Chieti": "CCIAA di Chieti-Pescara", "Pescara": "CCIAA di Chieti-Pescara", "Ascoli Piceno": "CCIAA di Ascoli Piceno-Fermo", "Fermo": "CCIAA di Ascoli Piceno-Fermo", "Belluno": "CCIAA di Belluno-Dolomiti", "Venezia": "CCIAA di Venezia Rovigo Delta Lagunare", "Rovigo": "CCIAA di Venezia Rovigo Delta Lagunare", "Palermo": "CCIAA di Palermo-Enna", "Enna": "CCIAA di Palermo-Enna", "Cagliari": "CCIAA di Cagliari-Oristano", "Oristano": "CCIAA di Cagliari-Oristano"};
+
+function cciaaNameFor(provincia){
+  if(!provincia) return "";
+  return CCIAA_OVERRIDE[provincia] || ("CCIAA di " + provincia);
+}
+
+function getAllCCIAA(){
+  const set = new Set();
+  Object.values(REGIONI_PROVINCE).flat().forEach(p => set.add(cciaaNameFor(p)));
+  return Array.from(set).sort();
+}
+
+const STORAGE_KEY = "gestionale_bandi_v1";
+let bandi = [];
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    bandi = raw ? JSON.parse(raw) : [];
+  }catch(e){ bandi = []; }
+}
+
+function saveData(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(bandi));
+  const s = document.getElementById('saveStatus');
+  s.textContent = "Salvato ✓ " + new Date().toLocaleTimeString();
+  s.style.opacity = 1;
+  setTimeout(()=>{ s.style.opacity = 0.3; }, 1500);
+}
+
+function uid(){ return 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+
+function populateSelect(select, options, placeholder){
+  select.innerHTML = "";
+  const opt0 = document.createElement('option');
+  opt0.value = ""; opt0.textContent = placeholder;
+  select.appendChild(opt0);
+  options.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = o;
+    select.appendChild(opt);
+  });
+}
+
+function initFormSelects(){
+  const regioneSelect = document.getElementById('f-regione');
+  populateSelect(regioneSelect, Object.keys(REGIONI_PROVINCE).sort(), "-- Seleziona regione --");
+  populateSelect(document.getElementById('f-provincia'), [], "-- Seleziona prima la regione --");
+  populateSelect(document.getElementById('f-cciaa'), getAllCCIAA(), "-- Seleziona Camera di Commercio --");
+
+  regioneSelect.addEventListener('change', () => {
+    const provs = REGIONI_PROVINCE[regioneSelect.value] || [];
+    populateSelect(document.getElementById('f-provincia'), provs, provs.length ? "-- Seleziona provincia --" : "-- Nessuna provincia --");
+  });
+
+  document.getElementById('f-provincia').addEventListener('change', (e)=>{
+    const prov = e.target.value;
+    if(prov){
+      const cciaaSelect = document.getElementById('f-cciaa');
+      const name = cciaaNameFor(prov);
+      if(![...cciaaSelect.options].some(o=>o.value===name)){
+        const opt = document.createElement('option'); opt.value=name; opt.textContent=name;
+        cciaaSelect.appendChild(opt);
+      }
+      cciaaSelect.value = name;
+    }
+  });
+
+  ['regione','provincia','cciaa'].forEach(field=>{
+    document.getElementById('f-'+field+'-free-toggle').addEventListener('change', (e)=>{
+      const select = document.getElementById('f-'+field);
+      const free = document.getElementById('f-'+field+'-free');
+      if(e.target.checked){ select.style.display='none'; free.style.display='block'; }
+      else{ select.style.display='block'; free.style.display='none'; }
+    });
+  });
+}
+
+function initFilterSelects(){
+  populateSelect(document.getElementById('filter-regione'), Object.keys(REGIONI_PROVINCE).sort(), "Tutte");
+  populateSelect(document.getElementById('filter-provincia'), Object.values(REGIONI_PROVINCE).flat().sort(), "Tutte");
+  populateSelect(document.getElementById('filter-cciaa'), getAllCCIAA(), "Tutte");
+}
+
+function getFieldValue(field){
+  const toggle = document.getElementById('f-'+field+'-free-toggle');
+  if(toggle.checked){
+    return document.getElementById('f-'+field+'-free').value.trim();
+  }
+  return document.getElementById('f-'+field).value.trim();
+}
+
+function clearForm(){
+  document.getElementById('f-titolo').value = "";
+  document.getElementById('f-link').value = "";
+  document.getElementById('f-data').value = "";
+  ['regione','provincia','cciaa'].forEach(field=>{
+    document.getElementById('f-'+field).value = "";
+    document.getElementById('f-'+field+'-free').value = "";
+    document.getElementById('f-'+field+'-free-toggle').checked = false;
+    document.getElementById('f-'+field+'-free').style.display = 'none';
+    document.getElementById('f-'+field).style.display = 'block';
+  });
+  populateSelect(document.getElementById('f-provincia'), [], "-- Seleziona prima la regione --");
+}
+
+function addBando(){
+  const titolo = document.getElementById('f-titolo').value.trim();
+  const link = document.getElementById('f-link').value.trim();
+  const data_apertura = document.getElementById('f-data').value;
+  const regione = getFieldValue('regione');
+  const provincia = getFieldValue('provincia');
+  const cciaa = getFieldValue('cciaa');
+
+  if(!titolo || !link){
+    alert("Titolo e Link sono obbligatori.");
+    return;
+  }
+  bandi.push({ id: uid(), titolo, link, data_apertura, regione, provincia, cciaa, selected:false });
+  saveData();
+  clearForm();
+  render();
+}
+
+function deleteBando(id){
+  if(!confirm("Eliminare questo bando?")) return;
+  bandi = bandi.filter(b => b.id !== id);
+  saveData();
+  render();
+}
+
+function editBando(id){
+  const b = bandi.find(x=>x.id===id);
+  if(!b) return;
+  const newTitolo = prompt("Titolo bando:", b.titolo);
+  if(newTitolo===null) return;
+  const newLink = prompt("Link:", b.link);
+  if(newLink===null) return;
+  const newData = prompt("Data apertura (YYYY-MM-DD):", b.data_apertura || "");
+  const newRegione = prompt("Regione:", b.regione || "");
+  const newProvincia = prompt("Provincia:", b.provincia || "");
+  const newCciaa = prompt("Camera di Commercio:", b.cciaa || "");
+  b.titolo = newTitolo.trim();
+  b.link = newLink.trim();
+  b.data_apertura = newData ? newData.trim() : "";
+  b.regione = newRegione ? newRegione.trim() : "";
+  b.provincia = newProvincia ? newProvincia.trim() : "";
+  b.cciaa = newCciaa ? newCciaa.trim() : "";
+  saveData();
+  render();
+}
+
+function applyFilters(list){
+  const search = document.getElementById('filter-search').value.toLowerCase();
+  const reg = document.getElementById('filter-regione').value;
+  const prov = document.getElementById('filter-provincia').value;
+  const cciaa = document.getElementById('filter-cciaa').value;
+  return list.filter(b=>{
+    if(search && !b.titolo.toLowerCase().includes(search)) return false;
+    if(reg && b.regione !== reg) return false;
+    if(prov && b.provincia !== prov) return false;
+    if(cciaa && b.cciaa !== cciaa) return false;
+    return true;
+  });
+}
+
+function render(){
+  const tbody = document.getElementById('table-body');
+  const filtered = applyFilters(bandi);
+  document.getElementById('rowCount').textContent = "(" + filtered.length + " / " + bandi.length + ")";
+  if(filtered.length===0){
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Nessun bando trovato. Aggiungine uno dal form sopra.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(b => `
+    <tr>
+      <td><input type="checkbox" class="row-check" data-id="${b.id}" ${b.selected?'checked':''}></td>
+      <td>${escapeHtml(b.titolo)}</td>
+      <td><a class="link" href="${escapeHtml(b.link)}" target="_blank" rel="noopener">Apri link</a></td>
+      <td>${b.data_apertura || '<span class="badge">n/d</span>'}</td>
+      <td>${b.regione || '<span class="badge">n/d</span>'}</td>
+      <td>${b.provincia || '<span class="badge">n/d</span>'}</td>
+      <td>${b.cciaa || '<span class="badge">n/d</span>'}</td>
+      <td>
+        <button class="icon-btn" title="Modifica" onclick="editBando('${b.id}')">✏️</button>
+        <button class="icon-btn" title="Elimina" onclick="deleteBando('${b.id}')">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.querySelectorAll('.row-check').forEach(chk=>{
+    chk.addEventListener('change', (e)=>{
+      const b = bandi.find(x=>x.id === e.target.dataset.id);
+      if(b) b.selected = e.target.checked;
+      saveData();
+    });
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || "";
+  return div.innerHTML;
+}
+
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(bandi, null, 2)], {type:'application/json'});
+  downloadBlob(blob, `bandi_backup_${dateStamp()}.json`);
+}
+
+function exportExcel(){
+  const rows = bandi.map(b => ({
+    "Titolo del bando": b.titolo,
+    "Link": b.link,
+    "Data apertura sportello": b.data_apertura,
+    "Regione": b.regione,
+    "Provincia": b.provincia,
+    "Camera di Commercio": b.cciaa
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Bandi");
+  XLSX.writeFile(wb, `bandi_backup_${dateStamp()}.xlsx`);
+}
+
+function importJSON(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const imported = JSON.parse(e.target.result);
+      if(!Array.isArray(imported)) throw new Error("Formato non valido");
+      const merge = confirm("Vuoi unire i dati importati a quelli esistenti? Annulla per sovrascrivere completamente.");
+      if(merge){
+        const existingIds = new Set(bandi.map(b=>b.id));
+        imported.forEach(b=>{ if(!b.id || existingIds.has(b.id)) b.id = uid(); });
+        bandi = bandi.concat(imported);
+      } else {
+        bandi = imported.map(b => ({...b, id: b.id || uid()}));
+      }
+      saveData();
+      render();
+      alert("Import completato: " + imported.length + " bandi.");
+    }catch(err){
+      alert("Errore durante l'import: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function dateStamp(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function getSelectedBandi(){
+  return bandi.filter(b=>b.selected);
+}
+
+function buildMailBody(selected){
+  return selected.map(b => (
+`Bando: ${b.titolo}
+Link: ${b.link}
+Regione: ${b.regione || 'n/d'}
+Provincia: ${b.provincia || 'n/d'}
+Camera di Commercio: ${b.cciaa || 'n/d'}
+`)).join('\n---\n\n');
+}
+
+function openMailModal(){
+  const selected = getSelectedBandi();
+  if(selected.length===0){
+    alert("Seleziona almeno un bando dalla tabella.");
+    return;
+  }
+  document.getElementById('mail-subject').value = `Bandi selezionati (${selected.length})`;
+  document.getElementById('mail-body').value = buildMailBody(selected);
+  document.getElementById('mail-modal').classList.add('open');
+}
+
+function closeMailModal(){
+  document.getElementById('mail-modal').classList.remove('open');
+}
+
+function sendMail(){
+  const to = document.getElementById('mail-to').value.trim();
+  const subject = document.getElementById('mail-subject').value.trim();
+  const body = document.getElementById('mail-body').value;
+  const mailto = `mailto:${encodeURIComponent(to).replace(/%2C/g,',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+  closeMailModal();
+}
+
+function initEvents(){
+  document.getElementById('btn-add').addEventListener('click', addBando);
+  document.getElementById('btn-clear-form').addEventListener('click', clearForm);
+  document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+  document.getElementById('btn-export-excel').addEventListener('click', exportExcel);
+  document.getElementById('btn-import-json-trigger').addEventListener('click', ()=> document.getElementById('btn-import-json').click());
+  document.getElementById('btn-import-json').addEventListener('change', (e)=>{
+    if(e.target.files[0]) importJSON(e.target.files[0]);
+    e.target.value = "";
+  });
+  document.getElementById('btn-send-mail').addEventListener('click', openMailModal);
+  document.getElementById('mail-confirm').addEventListener('click', sendMail);
+  document.getElementById('mail-cancel').addEventListener('click', closeMailModal);
+  document.getElementById('btn-select-all').addEventListener('click', ()=>{
+    applyFilters(bandi).forEach(b=>b.selected=true); saveData(); render();
+  });
+  document.getElementById('btn-deselect-all').addEventListener('click', ()=>{
+    bandi.forEach(b=>b.selected=false); saveData(); render();
+  });
+  document.getElementById('check-all-header').addEventListener('change', (e)=>{
+    applyFilters(bandi).forEach(b=>b.selected=e.target.checked); saveData(); render();
+  });
+  document.getElementById('btn-delete-selected').addEventListener('click', ()=>{
+    const sel = getSelectedBandi();
+    if(sel.length===0){ alert("Nessun bando selezionato."); return; }
+    if(!confirm(`Eliminare ${sel.length} bandi selezionati?`)) return;
+    const selIds = new Set(sel.map(b=>b.id));
+    bandi = bandi.filter(b=>!selIds.has(b.id));
+    saveData(); render();
+  });
+  ['filter-search','filter-regione','filter-provincia','filter-cciaa'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', render);
+  });
+}
+
+loadData();
+initFormSelects();
+initFilterSelects();
+initEvents();
+render();
+</script>
+</body>
+</html>
